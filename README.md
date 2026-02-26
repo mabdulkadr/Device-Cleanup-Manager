@@ -40,7 +40,7 @@ C:\ProgramData\DeviceCleanupManager
 
 ## ✨ Core Features
 
-### 🔹 Search Modes (Simplified Cleanup)
+### 🔹 Search Modes
 
 * **Inactive Devices (by days)**
 
@@ -52,7 +52,7 @@ C:\ProgramData\DeviceCleanupManager
 
 ---
 
-### 🔹 OU Scope Selector (LDAP)
+### 🔹 OU Scope Selector
 
 * Fast OU discovery via LDAP
 * Searchable OU picker window
@@ -81,7 +81,7 @@ C:\ProgramData\DeviceCleanupManager
 
 ---
 
-### 🔹 Bulk Actions (Safe by Design)
+### 🔹 Bulk Actions
 
 Actions are available for **Selected devices**:
 
@@ -124,7 +124,7 @@ If the DN is missing, the tool resolves the device in AD at action-time.
 
 ### 🔹 Export Results
 
-Export current grid results to CSV (UTF-8):
+Export current grid results to CSV:
 
 * ComputerName
 * Enabled
@@ -160,7 +160,6 @@ Used for:
 ### System
 
 * Windows 10 / 11
-* Windows PowerShell **5.1**
 * Domain connectivity (recommended)
 * Run as **Admin** when your role/permissions require elevation
 
@@ -272,4 +271,3 @@ This tool is provided **as-is**.
 ## 📜 License
 
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
-
