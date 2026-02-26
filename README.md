@@ -12,7 +12,7 @@
 
 ## 📖 Overview
 
-**Device Cleanup Manager** is a modern **WPF-based PowerShell 5.1** tool designed to centrally manage **Active Directory computer objects** for cleanup and control.
+**Device Cleanup Manager** is a modern **WPF-based PowerShell** tool designed to centrally manage **Active Directory computer objects** for cleanup and control.
 
 It provides a safe, structured interface to:
 
@@ -272,3 +272,4 @@ This tool is provided **as-is**.
 ## 📜 License
 
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
+
