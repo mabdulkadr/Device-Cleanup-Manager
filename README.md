@@ -1,125 +1,274 @@
-# DevicesInactiveCleanupTool GUI
 
-![Scope](https://img.shields.io/static/v1?label=scope&message=ActiveDirectory&color=blue)
-![Mode](https://img.shields.io/static/v1?label=mode&message=CLI%2BGUI&color=lightgrey)
-![Scripts](https://img.shields.io/static/v1?label=scripts&message=2&color=green)
-![Pattern](https://img.shields.io/static/v1?label=pattern&message=StandaloneScripts&color=blue)
-![Tech](https://img.shields.io/static/v1?label=tech&message=AD&color=blue)
+# 🧹 Device Cleanup Manager
+
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![PowerShell](https://img.shields.io/badge/powershell-5.1%2B-blue.svg)
+![Platform](https://img.shields.io/badge/Windows-10%2F11-blue.svg)
+![UI](https://img.shields.io/badge/WPF-GUI-lightgrey.svg)
+![Directory](https://img.shields.io/badge/Active%20Directory-RSAT%20AD-green.svg)
+![Version](https://img.shields.io/badge/version-2.0-green.svg)
 
 ---
 
 ## 📖 Overview
-This folder contains **2 PowerShell script(s)**. The documentation below is generated from actual script content and includes technical behavior, dependencies, integration points, and exit-code patterns.
 
+**Device Cleanup Manager** is a modern **WPF-based PowerShell 5.1** tool designed to centrally manage **Active Directory computer objects** for cleanup and control.
 
-## ✨ Features
-- Folder scope: `ActiveDirectory`
-- Execution mode: `CLI+GUI`
-- Scripts detected: **2**
-- Path: `ActiveDirectory-Scripts\DevicesInactiveCleanupTool GUI\README.md`
+It provides a safe, structured interface to:
 
+- Discover **Inactive devices** using `LastLogonDate` with a configurable **Days Inactive** threshold  
+- Discover **Disabled computers** (`Enabled = False`)  
+- Scope searches to a selected **OU (LDAP)** using a searchable browser  
+- Import device names from **CSV** for bulk operations  
+- Execute controlled actions (**Disable / Enable / Delete**) with confirmations and protection rules  
+- Export results to CSV and track actions in a real-time **Message Center** log  
 
-## ⚙️ Requirements
-- Windows PowerShell 5.1 or newer.
-- Permissions aligned with script operations (file system, services, tasks, registry, API).
-- Required modules and APIs are listed per script in Technical Details.
+All application data is stored under:
 
-## 📂 Script Inventory
-| File | Type | Synopsis |
-|---|---|---|
-| `DevicesInactiveCleanupTool.ps1` | Automation | Automation script for DevicesInactiveCleanupTool. |
-| `test.ps1` | Automation | Automation script for test. |
+```text
+C:\ProgramData\DeviceCleanupManager
+├── Logs
+````
 
+---
 
-## 🔍 Technical Details
-### `DevicesInactiveCleanupTool.ps1`
-- **Functional Type:** Automation
-- **Purpose:** Automation script for DevicesInactiveCleanupTool.
-- **Technical Description:** This script automates tasks related to DevicesInactiveCleanupTool. Review prerequisites, permissions, and execution context before production deployment. Exit codes: - Exit 0: Completed successfully - Exit 1: Failed or requires further action
-- **Expected Run Context (Run As):** System or User (according to assignment settings and script requirements).
-- **Path:** `ActiveDirectory-Scripts\DevicesInactiveCleanupTool GUI\DevicesInactiveCleanupTool.ps1`
-- **Observed Exit Codes:** `0`, `1`
-- **Technical Dependencies:**
-  - RSAT ActiveDirectory module and AD read/write permissions based on target operations.
+## 🖥 Screenshot
 
-#### Internal Functions
-- `Populate-OUComboBox`
-- `Search-InactiveComputers`
-- `Show-WPFConfirmation`
-- `Show-WPFMessage`
+![Screenshot](Screenshot.png)
 
-#### Key Cmdlets/Commands
-- `Add-Type`
-- `Add-WindowsCapability`
-- `Disable-ADAccount`
-- `Export-Csv`
-- `Get-ADComputer`
-- `Get-ADDomain`
-- `Get-ADObject`
-- `Get-Command`
-- `Get-Date`
-- `Get-Module`
-- `Import-Module`
-- `Install-WindowsFeature`
-- `New-Object`
-- `New-TimeSpan`
-- `Populate-OUComboBox`
-- *(+10 additional commands found in script)*
+---
 
-### `test.ps1`
-- **Functional Type:** Automation
-- **Purpose:** Automation script for test.
-- **Technical Description:** This script automates tasks related to test. Review prerequisites, permissions, and execution context before production deployment. Exit codes: - Exit 0: Completed successfully - Exit 1: Failed or requires further action
-- **Expected Run Context (Run As):** System or User (according to assignment settings and script requirements).
-- **Path:** `ActiveDirectory-Scripts\DevicesInactiveCleanupTool GUI\test.ps1`
-- **Observed Exit Codes:** `0`, `1`
-- **Technical Dependencies:**
-  - RSAT ActiveDirectory module and AD read/write permissions based on target operations.
+## ✨ Core Features
 
-#### Key Cmdlets/Commands
-- `Get-ADComputer`
-- `Import-Module`
-- `Write-Error`
-- `Write-Output`
+### 🔹 Search Modes (Simplified Cleanup)
 
+* **Inactive Devices (by days)**
 
-## 🚀 Usage
-```powershell
-Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
-.\DevicesInactiveCleanupTool.ps1
-.\test.ps1
+  * Uses `LastLogonDate` and compares it to a cutoff date
+  * Optional: include devices with **no logon timestamp**
+* **Disabled Computers**
+
+  * Uses server-side filter: `Enabled -eq $false`
+
+---
+
+### 🔹 OU Scope Selector (LDAP)
+
+* Fast OU discovery via LDAP
+* Searchable OU picker window
+* Scope options:
+
+  * **Entire Domain**
+  * **Specific OU** (selected via Browse…)
+
+---
+
+### 🔹 Results Dashboard
+
+* DataGrid with:
+
+  * Select per-row (checkbox)
+  * **Select All**
+  * Full details:
+
+    * Computer Name
+    * Enabled
+    * Last Logon Date
+    * Inactive Days
+    * OU Path (friendly)
+    * Distinguished Name
+    * Source (Search / CSV)
+
+---
+
+### 🔹 Bulk Actions (Safe by Design)
+
+Actions are available for **Selected devices**:
+
+* **Disable Selected**
+* **Enable Selected**
+* **Delete Selected**
+
+All actions are protected by:
+
+* Confirmation dialog (Yes/No)
+* Protected DN rules (skip objects under protected OUs/DNs)
+
+---
+
+### 🔹 CSV Import (Bulk List Mode)
+
+Import a list of devices (names only) into the grid for actions.
+
+Supported columns:
+
+* `ComputerName`
+* `Name`
+
+Example:
+
+```csv
+ComputerName
+PC-001
+PC-002
+LAB-010
 ```
 
+Imported items are labeled:
 
-## 🛡️ Operational Notes
-- ✅ Validate scripts in a pilot environment before production rollout.
-- 🔎 Review execution logs (if present) and verify exit codes match expected behavior.
-- ⚠️ For Intune use cases, validate assignment context and **Run this script using logged-on credentials** configuration.
+* `Source = CSV`
 
+If the DN is missing, the tool resolves the device in AD at action-time.
 
-## 📦 Additional Files
-- `DevicesInactiveCleanupTool.exe`
-- `Screenshot.png`
-- `trash (1).ico`
-- `trash (1).png`
-- `trash.ico`
+---
 
+### 🔹 Export Results
 
-## 🧷 Compatibility and Revision
-- Documentation last updated: **2026-02-15**
-- This README is standardized and generated from local script analysis to keep documentation aligned with implementation.
+Export current grid results to CSV (UTF-8):
+
+* ComputerName
+* Enabled
+* LastLogonDate
+* InactiveDays
+* OUPath
+* DistinguishedName
+* Source
+
+---
+
+### 🔹 Message Center
+
+Real-time console log with levels:
+
+* INFO
+* SUCCESS
+* WARNING
+* ERROR
+
+Used for:
+
+* Search start/end
+* OU scope selection
+* Import/export tracking
+* Action results and failures
+* LDAP/RSAT errors
+
+---
+
+## ⚙️ Requirements
+
+### System
+
+* Windows 10 / 11
+* Windows PowerShell **5.1**
+* Domain connectivity (recommended)
+* Run as **Admin** when your role/permissions require elevation
+
+### Modules
+
+Required (RSAT AD):
+
+```powershell
+ActiveDirectory
+```
+
+Install RSAT (Windows 10/11):
+
+```powershell
+Add-WindowsCapability -Online -Name Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0
+```
+
+---
+
+## 🧠 Inactivity Logic (Important)
+
+The tool uses:
+
+* `Get-ADComputer ... -Properties LastLogonDate`
+
+`LastLogonDate` is derived from **lastLogonTimestamp replication**.
+
+✅ Suitable for cleanup reporting and identifying stale objects
+⚠ Not a real-time “last logon across all DCs” metric
+
+---
+
+## 🚀 How to Run
+
+### Option 1 — PowerShell Script
+
+```powershell
+Set-ExecutionPolicy Bypass -Scope Process -Force
+.\DeviceCleanupManager.ps1
+```
+
+### Option 2 — Packaged EXE
+
+Run:
+
+```text
+DeviceCleanupManager.exe
+```
+
+---
+
+## 🔄 Typical Workflow
+
+1. Launch tool
+2. Choose **Mode**
+
+   * Inactive Devices (set Days)
+   * Disabled Computers
+3. Select **OU Scope**
+
+   * Browse… → search and pick OU
+4. Click **Run Search**
+5. Review results and check devices
+6. Execute actions:
+
+   * Disable / Enable / Delete Selected
+7. Export results if needed
+
+---
+
+## 🛡 Operational Safeguards
+
+* RSAT AD module validation before AD operations
+* Confirmation prompts for destructive actions
+* Protected DN rule evaluation before actions
+* Safe refresh logic after actions (updates grid state)
+* CSV import supports “names-only” lists (resolved on action)
+
+---
+
+## 📁 Folder Structure
+
+```text
+C:\ProgramData\DeviceCleanupManager\
+ ├── Logs\
+```
+
+---
+
+## ⚠ Disclaimer
+
+This tool is provided **as-is**.
+
+* Test in a staging OU before production use
+* Validate permissions and organizational policies
+* Deleting AD computer objects is irreversible unless you rely on AD Recycle Bin / backups
+
+---
+
+## 👤 Author
+
+* **Mohammad Abdelkader**
+* Website: **momar.tech**
+* Version: **2.0**
+* Date: **2026-02-25**
 
 ---
 
 ## 📜 License
 
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT).
-
----
-
-## ⚠️ Disclaimer
-
-This script is provided **as-is** without warranty.
-The author is **not responsible** for unintended modifications or data loss.
-Always test thoroughly before deploying in production.
-
