@@ -264,6 +264,13 @@ This project is licensed under the [MIT License](https://opensource.org/licenses
 
 ---
 
+## ☕ Donate
+
+If you find this project helpful, consider supporting it by  
+[buying me a coffee](https://www.buymeacoffee.com/mabdulkadrx).
+
+---
+
 ## ⚠ Disclaimer
 
 This tool is provided **as-is**.
@@ -271,3 +278,4 @@ This tool is provided **as-is**.
 * Test in a staging OU before production use
 * Validate permissions and organizational policies
 * Deleting AD computer objects is irreversible unless you rely on AD Recycle Bin / backups
+
