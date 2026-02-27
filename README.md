@@ -8,6 +8,8 @@
 ![Directory](https://img.shields.io/badge/Active%20Directory-RSAT%20AD-green.svg)
 ![Version](https://img.shields.io/badge/version-2.0-green.svg)
 
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20A%20Coffee-☕-FFDD00?style=for-the-badge)](https://www.buymeacoffee.com/mabdulkadrx)
+
 ---
 
 ## 📖 Overview
@@ -278,4 +280,5 @@ This tool is provided **as-is**.
 * Test in a staging OU before production use
 * Validate permissions and organizational policies
 * Deleting AD computer objects is irreversible unless you rely on AD Recycle Bin / backups
+
 
