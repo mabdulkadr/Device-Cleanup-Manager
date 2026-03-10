@@ -275,10 +275,6 @@ If you find this project helpful, consider supporting it by
 
 ## ⚠ Disclaimer
 
-This tool is provided **as-is**.
-
-* Test in a staging OU before production use
-* Validate permissions and organizational policies
-* Deleting AD computer objects is irreversible unless you rely on AD Recycle Bin / backups
+These scripts are provided as-is. Test them in a staging environment before applying them to production. The author is not responsible for any unintended outcomes resulting from their use.
 
 
