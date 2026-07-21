@@ -16,21 +16,24 @@
       - Get-ADComputer LastLogonDate is derived from lastLogonTimestamp replication and is suitable for cleanup reporting.
       - It is not the exact real-time "last logon" across all DCs.
 
-.RUN AS
-    Domain admin / delegated AD rights (recommended). A domain context is required for LDAP OU loading.
-    RSAT ActiveDirectory module is required for AD actions (search/enable/disable/delete).
+    Requires Domain admin / delegated AD rights (recommended). A domain context is required for
+    LDAP OU loading. RSAT ActiveDirectory module is required for AD actions (search/enable/disable/delete).
 
 .EXAMPLE
     .\DeviceCleanupManager.ps1
 
 .NOTES
-    Author  : Mohammad Abdelkader
-    Website : momar.tech
-    Date    : 2026-02-25
-    Version : 2.0
+    Author      : Mohammad Abdelkader Omar
+    Website     : https://momar.tech
+    LinkedIn    : https://www.linkedin.com/in/mabdulkadr/
+    Date        : 2026-02-25
+    Version     : 2.0
+    Changelog   :
+                 2.0 - Full WPF rebuild with LDAP OU loader, CSV import, and protection rules.
+                 1.0 - Initial release.
 #>
 
-#region ============================== CONFIG / CONSTANTS ===========================================
+#region ======================== CONFIG / CONSTANTS ========================
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
 
@@ -48,9 +51,9 @@ $script:ScanJob   = $null
 $script:ScanTimer = $null
 $script:OUAllItems = @()     # full OU list (objects)
 $script:SelectedOUItem = $null
-#endregion
+#endregion ======================== CONFIG / CONSTANTS ========================
 
-#region ============================== WPF HELPERS / LOGGING =======================================
+#region ======================== WPF HELPERS / LOGGING ========================
 Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase | Out-Null
 Add-Type -AssemblyName System.DirectoryServices | Out-Null
 Add-Type -AssemblyName Microsoft.VisualBasic | Out-Null
@@ -61,6 +64,7 @@ function New-Brush {
     return $bc.ConvertFromString($Hex)
 }
 
+# Appends a timestamped, color-coded log message to the WPF RichTextBox log panel.
 function Add-LogLine {
     param(
         [Parameter(Mandatory=$true)][string]$Message,
@@ -98,6 +102,7 @@ function Add-LogLine {
     $script:LogBox.ScrollToEnd()
 }
 
+# Displays a WPF modal message dialog with a colored header bar and OK button.
 function Show-WPFMessage {
     [CmdletBinding()]
     param(
@@ -151,6 +156,7 @@ function Show-WPFMessage {
     [void]$w.ShowDialog()
 }
 
+# Displays a WPF confirmation dialog with Yes/No buttons. Returns $true if Yes.
 function Show-WPFConfirmation {
     [CmdletBinding()]
     param(
@@ -219,6 +225,7 @@ function Show-WPFConfirmation {
     return $w.DialogResult
 }
 
+# Executes a scriptblock inside try/catch. On failure, logs the error and shows an error dialog.
 function Invoke-SafeUIAction {
     param(
         [Parameter(Mandatory=$true)][scriptblock]$Action,
@@ -234,9 +241,9 @@ function Invoke-SafeUIAction {
         Show-WPFMessage -Message ("{0} failed.`n{1}" -f $ActionName, $err) -Title 'Operation Error' -Color 'Red'
     }
 }
-#endregion
+#endregion ======================== WPF HELPERS / LOGGING ========================
 
-#region ============================== PROTECTION RULES ============================================
+#region ======================== PROTECTION RULES ========================
 function Test-IsProtectedDN {
     param([string]$DistinguishedName)
 
@@ -246,9 +253,9 @@ function Test-IsProtectedDN {
     }
     return $false
 }
-#endregion
+#endregion ======================== PROTECTION RULES ========================
 
-#region ============================== LDAP OU LOADER (FAST) =======================================
+#region ======================== LDAP OU LOADER (FAST) ========================
 function Convert-DNToFriendlyPath {
     param([string]$DN)
 
@@ -268,6 +275,7 @@ function Convert-DNToFriendlyPath {
     return ($ous -join ' / ')
 }
 
+# Deduplicates DN strings, converts each to a friendly display path, and returns OU items for ComboBox binding.
 function Convert-DNListToOUItems {
     param([string[]]$DNs)
 
@@ -289,6 +297,7 @@ function Convert-DNListToOUItems {
     return @([PSCustomObject]@{ Display = 'Entire Domain'; DN = '' }) + $results
 }
 
+# Resolves the LDAP base context (root DN, server, source) using AD domain, RootDSE, or environment hints.
 function Resolve-LDAPBaseContext {
     # Returns object: RootDN, Server, Source
     $candidates = @()
@@ -348,6 +357,7 @@ function Resolve-LDAPBaseContext {
     return $null
 }
 
+# Queries LDAP for all OUs using DirectorySearcher with paged results.
 function Get-OUsViaLDAP {
     # Returns OU items with Display text + DN value for ComboBox binding
     try {
@@ -381,6 +391,7 @@ function Get-OUsViaLDAP {
     }
 }
 
+# Stores the selected OU item and updates the UI scope text box.
 function Set-SelectedOUScope {
     param([object]$Item)
 
@@ -392,6 +403,7 @@ function Set-SelectedOUScope {
     }
 }
 
+# Opens a searchable WPF dialog for picking an OU from the loaded list.
 function Show-OUSelectorDialog {
     param(
         [Parameter(Mandatory=$true)][object[]]$Items,
@@ -546,6 +558,7 @@ function Show-OUSelectorDialog {
     return $selected
 }
 
+# Loads the full OU list via LDAP and sets the default selected scope.
 function Initialize-OUComboBox {
     try {
         Add-LogLine -Message 'Loading OUs via LDAP...' -Level 'INFO'
@@ -563,9 +576,9 @@ function Initialize-OUComboBox {
         Show-WPFMessage -Message ("Unable to load OU list from LDAP.`n{0}`n`nUse a domain account/session, or run from a domain-joined machine." -f $_.Exception.Message) -Title 'OU Load Error' -Color 'Red'
     }
 }
-#endregion
+#endregion ======================== LDAP OU LOADER (FAST) ========================
 
-#region ============================== AD UTILITIES ================================================
+#region ======================== AD UTILITIES ========================
 function Ensure-ADModule {
     if (-not (Get-Module -ListAvailable -Name ActiveDirectory)) {
         Show-WPFMessage -Message 'ActiveDirectory module (RSAT) is required for AD actions. Install RSAT or run on a management server/DC.' -Title 'Missing RSAT' -Color 'Red'
@@ -575,12 +588,14 @@ function Ensure-ADModule {
     return $true
 }
 
+# Retrieves the DN of the currently selected OU scope from the UI.
 function Get-SearchBaseDNFromUI {
     $sel = $script:SelectedOUItem
     if (-not $sel) { return '' }
     return ($sel.DN + '')
 }
 
+# Parses the 'Days Inactive' text box value into a positive integer, or $null if invalid.
 function Parse-DaysInactive {
     $n = 0
     $ok = [int]::TryParse(($script:DaysInactiveBox.Text + ''), [ref]$n)
@@ -588,11 +603,13 @@ function Parse-DaysInactive {
     return $n
 }
 
+# Reads the current cleanup mode from the UI radio buttons.
 function Get-ModeFromUI {
     if ($script:ModeDisabledOnly.IsChecked) { return 'DisabledOnly' }
     return 'InactiveOnly'
 }
 
+# Enables or disables the Days Inactive controls based on the current cleanup mode.
 function Update-ModeUIState {
     $mode = Get-ModeFromUI
     $isInactiveMode = ($mode -eq 'InactiveOnly')
@@ -608,9 +625,9 @@ function Update-ModeUIState {
         }
     }
 }
-#endregion
+#endregion ======================== AD UTILITIES ========================
 
-#region ============================== SEARCH ENGINE (JOB + TIMER) =================================
+#region ======================== SEARCH ENGINE (JOB + TIMER) ========================
 function Start-Search {
     if (-not (Ensure-ADModule)) { return }
 
@@ -769,9 +786,9 @@ function Start-Search {
 
     $script:ScanTimer.Start()
 }
-#endregion
+#endregion ======================== SEARCH ENGINE (JOB + TIMER) ========================
 
-#region ============================== CSV IMPORT + DIRECT ACTIONS =================================
+#region ======================== CSV IMPORT + DIRECT ACTIONS ========================
 function Import-CsvToGrid {
     $dlg = New-Object Microsoft.Win32.OpenFileDialog
     $dlg.Filter = 'CSV files (*.csv)|*.csv'
@@ -827,6 +844,7 @@ function Resolve-ADComputerByName {
     }
 }
 
+# Updates DataGrid rows after a Disable/Enable/Delete action by re-resolving from AD.
 function Refresh-GridAfterAction {
     param(
         [ValidateSet('Disable','Enable','Delete')][string]$Action,
@@ -884,6 +902,7 @@ function Refresh-GridAfterAction {
     if ($script:SelectAllGridCheck) { $script:SelectAllGridCheck.IsChecked = $false }
 }
 
+# Performs Disable/Enable/Delete on ALL devices in the grid (not just selected).
 function Invoke-DirectActionOnGrid {
     param(
         [ValidateSet('Disable','Enable','Delete')][string]$Action
@@ -951,9 +970,9 @@ function Invoke-DirectActionOnGrid {
 
     $script:StatusLabel.Text = ("{0} done. Success: {1}" -f $Action, $success)
 }
-#endregion
+#endregion ======================== CSV IMPORT + DIRECT ACTIONS ========================
 
-#region ============================== GRID ACTIONS (SELECTED) =====================================
+#region ======================== GRID ACTIONS (SELECTED) ========================
 function Set-GridCheckedState {
     param([bool]$Checked)
 
@@ -971,6 +990,7 @@ function Set-GridCheckedState {
     try { $script:ComputerGrid.Items.Refresh() } catch {}
 }
 
+# Retrieves all currently checked/selected items from the DataGrid.
 function Get-SelectedGridItems {
     try {
         [void]$script:ComputerGrid.CommitEdit([System.Windows.Controls.DataGridEditingUnit]::Cell, $true)
@@ -989,6 +1009,7 @@ function Get-SelectedGridItems {
     return $checked
 }
 
+# Performs Disable/Enable/Delete on checked/selected devices only. Primary action handler for UI buttons.
 function Invoke-ActionOnSelected {
     param([ValidateSet('Disable','Enable','Delete')][string]$Action)
 
@@ -1051,9 +1072,9 @@ function Invoke-ActionOnSelected {
 
     $script:StatusLabel.Text = ("{0} done. Success: {1}" -f $Action, $success)
 }
-#endregion
+#endregion ======================== GRID ACTIONS (SELECTED) ========================
 
-#region ============================== EXPORT / UTILS ==============================================
+#region ======================== EXPORT / UTILS ========================
 function Export-GridToCsv {
     $data = @($script:ComputerGrid.ItemsSource)
     if (@($data).Count -eq 0) {
@@ -1075,15 +1096,16 @@ function Export-GridToCsv {
     Add-LogLine -Message ("Exported CSV: {0}" -f $path) -Level 'SUCCESS'
 }
 
+# Clears the DataGrid, unchecks Select All, and resets the status label.
 function Clear-Results {
     $script:ComputerGrid.ItemsSource = @()
     if ($script:SelectAllGridCheck) { $script:SelectAllGridCheck.IsChecked = $false }
     $script:StatusLabel.Text = 'Cleared.'
     Add-LogLine -Message 'Results cleared.' -Level 'INFO'
 }
-#endregion
+#endregion ======================== EXPORT / UTILS ========================
 
-#region ============================== XAML UI ======================================================
+#region ======================== XAML UI ========================
 $xamlText = @'
 <Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -1503,9 +1525,9 @@ $xamlText = @'
   </Grid>
 </Window>
 '@
-#endregion
+#endregion ======================== XAML UI ========================
 
-#region ============================== LOAD UI / BIND CONTROLS =====================================
+#region ======================== LOAD UI / BIND CONTROLS ========================
 $xml = [xml]$xamlText
 $reader = New-Object System.Xml.XmlNodeReader($xml)
 $Window = [System.Windows.Markup.XamlReader]::Load($reader)
@@ -1560,9 +1582,9 @@ if ($IsAdmin) {
     $SessionElevationTxt.Text = 'User'
     $SessionElevationPill.Background = New-Brush '#FEF3C7'
 }
-#endregion
+#endregion ======================== LOAD UI / BIND CONTROLS ========================
 
-#region ============================== EVENT WIRE-UP ===============================================
+#region ======================== EVENT WIRE-UP ========================
 $script:SearchBtn.Add_Click({
     Invoke-SafeUIAction -Action { Start-Search } -ActionName 'Run Search'
 }) | Out-Null
@@ -1658,9 +1680,9 @@ $Window.Add_Closing({
         }
     } catch {}
 }) | Out-Null
-#endregion
+#endregion ======================== EVENT WIRE-UP ========================
 
-#region ============================== STARTUP ======================================================
+#region ======================== STARTUP ========================
 Add-LogLine -Message ("{0} starting..." -f $ToolName) -Level 'INFO'
 
 $script:StartupInitialized = $false
@@ -1683,4 +1705,4 @@ $Window.Add_ContentRendered({
 }) | Out-Null
 
 [void]$Window.ShowDialog()
-#endregion
+#endregion ======================== STARTUP ========================
