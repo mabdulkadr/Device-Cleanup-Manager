@@ -4,16 +4,17 @@
 
 **Active Directory computer cleanup, safely**
 
-Discover inactive and disabled computer objects, then disable, enable, or delete them in bulk — with confirmations and protected-OU rules.
+Find inactive and disabled computer accounts, then disable, enable, or delete them in bulk. Confirmation prompts and protected-OU rules guard the destructive actions.
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![PowerShell](https://img.shields.io/badge/powershell-5.1%2B-blue.svg)
-![Platform](https://img.shields.io/badge/Windows-10%2F11-blue.svg)
-![UI](https://img.shields.io/badge/UI-WPF%20GUI-blue.svg)
-![AD](https://img.shields.io/badge/Directory-Active%20Directory-0078D4.svg)
-![Version](https://img.shields.io/badge/version-2.0-green.svg)
+[![Mode](https://img.shields.io/badge/Mode-CLI-334155?style=for-the-badge)](#-usage)
+[![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-5391FE?style=for-the-badge&logo=powershell&logoColor=white)](https://learn.microsoft.com/en-us/powershell/)
+[![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-0F172A?style=for-the-badge)](#%EF%B8%8F-requirements)
+[![UI](https://img.shields.io/badge/UI-WPF%20Tailwind%20Slate-3B82F6?style=for-the-badge&logo=windows&logoColor=white)](#%EF%B8%8F-usage)
+[![AD](https://img.shields.io/badge/Directory-Active%20Directory-0078D4?style=for-the-badge)](#-overview)
+[![License](https://img.shields.io/badge/License-MIT-F59E0B?style=for-the-badge)](#-license)
+[![Version](https://img.shields.io/badge/Version-2.0-334155?style=for-the-badge)](#-overview)
 
-[Features](#-core-features) • [Usage](#-usage) • [Requirements](#️-requirements) • [Troubleshooting](#-troubleshooting)
+[Overview](#-overview) • [Features](#-core-features) • [Usage](#-usage) • [Requirements](#%EF%B8%8F-requirements) • [Troubleshooting](#-troubleshooting) • [License](#-license)
 
 </div>
 
@@ -21,53 +22,51 @@ Discover inactive and disabled computer objects, then disable, enable, or delete
 
 # 📖 Overview
 
-**Device Cleanup Manager** is a modern WPF-based PowerShell tool designed to centrally manage **Active Directory computer objects** for cleanup and control.
+Device Cleanup Manager is a WPF tool for managing Active Directory computer objects. It can:
 
-It provides a safe, structured interface to:
-
-* Discover **inactive devices** using `LastLogonDate` with a configurable **Days Inactive** threshold
-* Discover **disabled computers** (`Enabled = False`)
-* Scope searches to a selected **OU (LDAP)** using a searchable browser
-* Import device names from **CSV** for bulk operations
-* Execute controlled actions (**Disable / Enable / Delete**) with confirmations and protection rules
-* Export results to CSV and track actions in a real-time **Message Center** log
+* Find inactive devices using `LastLogonDate` and a configurable Days Inactive value
+* Find disabled computers where `Enabled = False`
+* Limit a search to one OU, picked from a searchable browser, or to the whole domain
+* Read a list of device names from CSV
+* Disable, enable, or delete the selected devices after confirmation and protected-OU checks
+* Export the results to CSV and show each step in a live Message Center
 
 ---
 
 ## 🖼️ Screenshots
 
-![Device Cleanup Manager main window — search modes, results DataGrid, and Message Center](Screenshot.png)
+![Device Cleanup Manager main window with search modes, results grid, and Message Center](Screenshot.png)
 
-*Main window: search mode selection, OU scope, the results DataGrid with per-row selection, and the real-time Message Center.*
+*Main window with the search mode controls, OU scope, results grid, and Message Center.*
 
 ---
 
 # ✨ Core Features
 
 ### 🔹 Search Modes
-* **Inactive Devices (by days)** — uses `LastLogonDate` against a configurable cutoff date; optionally include devices with **no logon timestamp**
-* **Disabled Computers** — server-side filter: `Enabled -eq $false`
+* Inactive Devices by days: compares `LastLogonDate` with a cutoff date. You can include devices that have no logon timestamp
+* Disabled Computers: uses the server-side filter `Enabled -eq $false`
 
 ### 🔹 OU Scope Selector
-* Fast OU discovery via LDAP with a searchable picker window
-* Scope options: **Entire Domain** or a **Specific OU** (Browse…)
+* An LDAP picker with a search box for finding OUs
+* Search the entire domain or one OU
 
 ### 🔹 Results Dashboard
-DataGrid with per-row checkboxes and **Select All**, showing: Computer Name, Enabled, Last Logon Date, Inactive Days, OU Path, Distinguished Name, and Source (Search / CSV)
+A grid with a checkbox on each row and a Select All option. Columns: Computer Name, Enabled, Last Logon Date, Inactive Days, OU Path, Distinguished Name, and Source (Search or CSV).
 
 ### 🔹 Bulk Actions
-Actions available for **selected devices**:
+The actions apply to checked rows:
 
 | Action | Protected By |
 |---|---|
-| **Disable Selected** | Confirmation dialog + protected DN rules |
-| **Enable Selected** | Confirmation dialog + protected DN rules |
-| **Delete Selected** | Confirmation dialog + protected DN rules |
+| **Disable Selected** | Confirmation dialog and protected DN rules |
+| **Enable Selected** | Confirmation dialog and protected DN rules |
+| **Delete Selected** | Confirmation dialog and protected DN rules |
 
-Protected DN rules skip any object under protected OUs/DNs before the action runs.
+Objects under a protected OU or DN are skipped before the action runs.
 
 ### 🔹 CSV Import (Bulk List Mode)
-Import a names-only device list into the grid. Supported columns: `ComputerName`, `Name`.
+Import a names-only list. The CSV can use `ComputerName` or `Name` as its header.
 
 ```csv
 ComputerName
@@ -76,11 +75,24 @@ PC-002
 LAB-010
 ```
 
-Imported items are labeled `Source = CSV`; if the DN is missing, the tool resolves the device in AD at action time.
+Imported rows are marked `Source = CSV`. If the DN is missing, the tool looks the device up in AD when the action runs.
 
 ### 🔹 Export & Message Center
-* **Export results** to CSV — ComputerName, Enabled, LastLogonDate, InactiveDays, OUPath, DistinguishedName, Source
-* **Message Center** — real-time console log (INFO / SUCCESS / WARNING / ERROR) covering searches, scope selection, import/export tracking, action results, and LDAP/RSAT errors
+* Export results to CSV with ComputerName, Enabled, LastLogonDate, InactiveDays, OUPath, DistinguishedName, and Source
+* A live log at INFO, SUCCESS, WARNING, and ERROR level covers searches, scope changes, imports, exports, action results, and LDAP or RSAT errors
+
+---
+
+# 📂 Project Structure
+
+```text
+Device-Cleanup-Manager/
+│
+├── DeviceCleanupManager.ps1      # WPF application source
+├── DeviceCleanupManager.exe      # Packaged executable
+├── Screenshot.png                # Documentation screenshot
+└── README.md
+```
 
 ---
 
@@ -101,17 +113,17 @@ Set-ExecutionPolicy Bypass -Scope Process -Force
 DeviceCleanupManager.exe
 ```
 
-The `.exe` was compiled and self-signed using [PSWrap](https://github.com/mabdulkadr/PSWrap) — no PowerShell console required.
+The EXE was compiled and self-signed with [PSWrap](https://github.com/mabdulkadr/PSWrap), so it runs without a PowerShell console.
 
 ### Typical Workflow
 
 1. Launch the tool
-2. Choose the **Mode**: Inactive Devices (set Days) or Disabled Computers
-3. Select the **OU Scope**: Browse → search and pick an OU
+2. Pick a mode: Inactive Devices with a day count, or Disabled Computers
+3. Pick the OU scope. Use Browse to search for an OU
 4. Click **Run Search**
-5. Review results and check devices
-6. Execute actions: Disable / Enable / Delete Selected
-7. Export results if needed
+5. Review the results and check the devices you want to act on
+6. Run Disable, Enable, or Delete on the selection
+7. Export the results if you need a record
 
 ---
 
@@ -120,11 +132,11 @@ The `.exe` was compiled and self-signed using [PSWrap](https://github.com/mabdul
 | Requirement | Details |
 |-------------|---------|
 | **OS** | Windows 10 / 11 |
-| **Domain** | Connectivity to a domain controller (recommended) |
-| **Elevation** | Run as **Admin** when your role/permissions require it |
+| **Domain** | Connectivity to a domain controller is recommended |
+| **Elevation** | Run as Administrator when your role requires it |
 | **Module** | `ActiveDirectory` (RSAT) |
 
-Install RSAT (Windows 10/11):
+Install RSAT on Windows 10 or 11:
 
 ```powershell
 Add-WindowsCapability -Online -Name Rsat.ActiveDirectory.DS-LDS.Tools~~~~0.0.1.0
@@ -139,12 +151,12 @@ C:\ProgramData\DeviceCleanupManager\
 
 ---
 
-# 🧠 Inactivity Logic (Important)
+# 🧠 Inactivity Logic
 
-The tool uses `Get-ADComputer ... -Properties LastLogonDate`. `LastLogonDate` is derived from **lastLogonTimestamp replication**:
+The tool runs `Get-ADComputer ... -Properties LastLogonDate`. That value comes from the replicated `lastLogonTimestamp`:
 
-* ✅ Suitable for cleanup reporting and identifying stale objects
-* ⚠ Not a real-time "last logon across all DCs" metric — recently active devices may lag by up to the replication tolerance
+* It works for cleanup reports and for finding stale objects
+* It is not a live "last logon across all DCs" figure. A recently active device can appear behind by up to the replication tolerance
 
 ---
 
@@ -152,27 +164,27 @@ The tool uses `Get-ADComputer ... -Properties LastLogonDate`. `LastLogonDate` is
 
 | Symptom | Likely Cause | Fix |
 |---------|--------------|-----|
-| OU list doesn't load | Not connected to domain or no LDAP access | Ensure domain connectivity; check firewall |
-| "RSAT module not found" | ActiveDirectory module not installed | Install RSAT via `Add-WindowsCapability` (see Requirements) |
-| Search returns no results | Days threshold too low or wrong OU scope | Increase Days Inactive or select "Entire Domain" |
-| Delete/Disable fails | Protected DN rule or insufficient permissions | Check protected OUs; verify delegated AD rights |
-| CSV import shows empty | Wrong column name in CSV | Use `ComputerName` or `Name` as the column header |
+| OU list doesn't load | No domain connection or no LDAP access | Check domain connectivity and firewall rules |
+| "RSAT module not found" | ActiveDirectory module missing | Install RSAT with `Add-WindowsCapability` (see Requirements) |
+| Search returns no results | Day count too low or wrong OU scope | Raise Days Inactive or select Entire Domain |
+| Delete or Disable fails | Protected DN rule or insufficient rights | Check protected OUs and delegated AD permissions |
+| CSV import shows empty | Wrong column header | Use `ComputerName` or `Name` |
 
 ---
 
 # 🛡 Operational Notes
 
-* **Built-in safeguards** — RSAT validation before AD operations, confirmation prompts for every destructive action, protected DN rule evaluation, and safe grid refresh after actions
-* **Configure protected OUs first** — review the protected DN rules before your first Delete run; they are the last line of defense
-* **Test in staging** — run a Disable pass on a pilot OU before any Delete; disabled devices can be re-enabled, deleted ones need AD Recycle Bin (or a restore)
-* **Least privilege** — delegate only the rights needed (e.g., delete computer objects in target OUs), not full Domain Admin
-* **Keep an audit trail** — export results before and after each action; the Message Center log is your session evidence
+* The tool checks for RSAT before AD work, asks for confirmation on destructive actions, applies protected DN rules, and refreshes the grid safely afterwards
+* Review the protected DN rules before your first Delete run. They are the main safeguard
+* Try a Disable pass on a pilot OU before deleting anything. A disabled account can be re-enabled; a deleted one needs AD Recycle Bin or a restore
+* Delegate only the rights the job needs, such as deleting computer objects in target OUs. Domain Admin is not required
+* Export results before and after each action. The Message Center log records the session
 
 ---
 
 ## 👤 Author
 
-**Mohammad Abdulkader Omar**  
+**Mohammad Abdelkader Omar**  
 GitHub: [@mabdulkadr](https://github.com/mabdulkadr)  
 Website: [momar.tech](https://momar.tech)  
 
@@ -192,7 +204,6 @@ production. The authors assume no liability for any damage or data loss
 resulting from their use.
 
 ---
-
 <div align="center">
 
 ⭐ **If this tool saves you time, star the repo — it helps others find it.**
