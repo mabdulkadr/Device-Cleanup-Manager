@@ -1,4 +1,4 @@
-<#!
+<#
 .SYNOPSIS
     Device Cleanup Manager (WPF) - Active Directory Computer Cleanup and Control.
 
